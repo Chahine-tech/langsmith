@@ -11,14 +11,17 @@ pub struct SwcStringExtractor;
 impl StringExtractor for SwcStringExtractor {
     async fn extract(&self, path: &Path, file_type: FileType) -> anyhow::Result<Vec<TranslationKey>> {
         let keys_with_pos = self.extract_with_positions(path, file_type).await?;
-        
+
         // Convert from TranslationKeyWithPosition to TranslationKey
-        Ok(keys_with_pos.into_iter().map(|k| TranslationKey {
-            id: k.id,
-            source: k.source,
-            file_path: k.file_path,
-            line: k.line,
-        }).collect())
+        Ok(keys_with_pos
+            .into_iter()
+            .map(|k| TranslationKey {
+                id: k.id,
+                source: k.source,
+                file_path: k.file_path,
+                line: k.line,
+            })
+            .collect())
     }
 }
 
@@ -26,9 +29,11 @@ impl StringExtractor for SwcStringExtractor {
 #[allow(dead_code)]
 impl SwcStringExtractor {
     /// Extract strings with byte position tracking
-    pub async fn extract_with_positions(&self, path: &Path, _file_type: FileType) 
-        -> anyhow::Result<Vec<TranslationKeyWithPosition>>
-    {
+    pub async fn extract_with_positions(
+        &self,
+        path: &Path,
+        _file_type: FileType,
+    ) -> anyhow::Result<Vec<TranslationKeyWithPosition>> {
         let content = std::fs::read_to_string(path)?;
         let mut keys = Vec::new();
         let mut seen = std::collections::HashSet::new();
@@ -44,7 +49,7 @@ impl SwcStringExtractor {
                         let key = format_key(text);
                         if !seen.contains(&key) {
                             let line = content[..match_range.start].lines().count();
-                            
+
                             keys.push(TranslationKeyWithPosition {
                                 id: key.clone(),
                                 source: text.to_string(),
@@ -70,7 +75,7 @@ impl SwcStringExtractor {
                         let key = format_key(text);
                         if !seen.contains(&key) {
                             let line = content[..match_range.start].lines().count();
-                            
+
                             keys.push(TranslationKeyWithPosition {
                                 id: key.clone(),
                                 source: text.to_string(),
@@ -98,7 +103,7 @@ impl SwcStringExtractor {
                             let key = format_key(text);
                             if !seen.contains(&key) {
                                 let line = content[..match_range.start].lines().count();
-                                
+
                                 keys.push(TranslationKeyWithPosition {
                                     id: key.clone(),
                                     source: text.to_string(),
@@ -123,7 +128,7 @@ impl SwcStringExtractor {
                 // Extract text between > and </
                 if let Some(text) = match_str.strip_prefix('>').and_then(|s| s.strip_suffix("</")) {
                     let text = text.trim();
-                    
+
                     // Skip empty strings
                     if !text.is_empty() {
                         // Skip if contains JSX component expressions ${...} or {variables}
@@ -133,7 +138,7 @@ impl SwcStringExtractor {
                                 if !seen.contains(&key) {
                                     let match_range = cap.range();
                                     let line = content[..match_range.start].lines().count();
-                                    
+
                                     keys.push(TranslationKeyWithPosition {
                                         id: key.clone(),
                                         source: text.to_string(),
@@ -157,7 +162,7 @@ impl SwcStringExtractor {
             for cap in re.captures_iter(&content) {
                 if let Some(attr_value) = cap.get(2) {
                     let text = attr_value.as_str();
-                    
+
                     // Skip empty attributes and expressions
                     if !text.is_empty() && !text.contains("{") && !text.contains("${") {
                         if self.should_extract(text, &excluded) {
@@ -165,7 +170,7 @@ impl SwcStringExtractor {
                             if !seen.contains(&key) {
                                 let match_range = attr_value.range();
                                 let line = content[..match_range.start].lines().count();
-                                
+
                                 keys.push(TranslationKeyWithPosition {
                                     id: key.clone(),
                                     source: text.to_string(),
@@ -199,14 +204,23 @@ impl SwcStringExtractor {
         }
 
         // Skip JSX component names (PascalCase like React, Button, MyComponent)
-        if self.is_pascal_case(text) && text.chars().next().unwrap_or(' ').is_uppercase() {
+        if self.is_pascal_case(text)
+            && text
+                .chars()
+                .next()
+                .map(|c| c.is_uppercase())
+                .unwrap_or(false)
+        {
             return false;
         }
 
         // Skip URLs (http, https, ftp, etc.)
-        if text.starts_with("http://") || text.starts_with("https://") 
-            || text.starts_with("ftp://") || text.starts_with("data:")
-            || text.starts_with("file://") {
+        if text.starts_with("http://")
+            || text.starts_with("https://")
+            || text.starts_with("ftp://")
+            || text.starts_with("data:")
+            || text.starts_with("file://")
+        {
             return false;
         }
 
@@ -224,8 +238,9 @@ impl SwcStringExtractor {
         }
 
         // Skip pure package names or imports (lowercase with dashes/underscores)
-        if text.chars().all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/') 
-            && text.len() < 20 {
+        if text.chars().all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/')
+            && text.len() < 20
+        {
             return false;
         }
 
@@ -248,17 +263,24 @@ impl SwcStringExtractor {
         if text.is_empty() {
             return false;
         }
-        
-        let first_char = text.chars().next().unwrap();
-        if !first_char.is_uppercase() {
+
+        let first_char = text
+            .chars()
+            .next()
+            .ok_or(())
+            .map_err(|_| "empty")
+            .map(|c| c.is_uppercase())
+            .unwrap_or(false);
+
+        if !first_char {
             return false;
         }
-        
+
         // Should not contain spaces or special chars (except maybe underscores)
         if text.contains(' ') || text.contains('-') {
             return false;
         }
-        
+
         // Should have at least one lowercase letter to be considered PascalCase
         text.chars().any(|c| c.is_lowercase())
     }
@@ -383,7 +405,7 @@ mod integration_tests {
         assert!(extractor.is_pascal_case("React"));
         assert!(extractor.is_pascal_case("UserProfile"));
         assert!(extractor.is_pascal_case("MyLongComponentName"));
-        
+
         // Invalid cases that should not be filtered
         assert!(!extractor.is_pascal_case("button"));
         assert!(!extractor.is_pascal_case("hello world"));
@@ -396,7 +418,7 @@ mod integration_tests {
     fn test_filtering_urls() {
         let extractor = SwcStringExtractor;
         let excluded = vec![];
-        
+
         // URLs should be filtered
         assert!(!extractor.should_extract("https://example.com", &excluded));
         assert!(!extractor.should_extract("http://example.com/page", &excluded));
@@ -409,7 +431,7 @@ mod integration_tests {
     fn test_filtering_emails() {
         let extractor = SwcStringExtractor;
         let excluded = vec![];
-        
+
         // Email addresses should be filtered
         assert!(!extractor.should_extract("user@example.com", &excluded));
         assert!(!extractor.should_extract("admin@domain.org", &excluded));
@@ -420,13 +442,13 @@ mod integration_tests {
     fn test_filtering_file_paths() {
         let extractor = SwcStringExtractor;
         let excluded = vec![];
-        
+
         // Paths with multiple slashes should be filtered
         assert!(!extractor.should_extract("/path/to/file/name", &excluded));
         assert!(!extractor.should_extract("./path/to/component", &excluded));
         assert!(!extractor.should_extract("../relative/path/file", &excluded));
         assert!(!extractor.should_extract("src/components/Button/index", &excluded));
-        
+
         // Single slash paths or simple paths should pass initial filter
         // (may be filtered by other rules)
         assert!(!extractor.should_extract("./file", &excluded)); // Has ./
@@ -437,7 +459,7 @@ mod integration_tests {
     fn test_should_extract_valid_strings() {
         let extractor = SwcStringExtractor;
         let excluded = vec![];
-        
+
         // Valid translatable strings
         assert!(extractor.should_extract("Hello World", &excluded));
         assert!(extractor.should_extract("Click Me", &excluded));
@@ -451,7 +473,7 @@ mod integration_tests {
     fn test_should_extract_short_strings() {
         let extractor = SwcStringExtractor;
         let excluded = vec![];
-        
+
         // Strings shorter than 3 chars should be filtered
         assert!(!extractor.should_extract("Hi", &excluded));
         assert!(!extractor.should_extract("OK", &excluded));
@@ -472,7 +494,7 @@ mod integration_tests {
     fn test_excluded_package_names() {
         let extractor = SwcStringExtractor;
         let excluded = extractor.get_excluded_strings();
-        
+
         // Common package/import names should be in excluded list
         assert!(excluded.contains(&"react"));
         assert!(excluded.contains(&"jsx"));
@@ -485,7 +507,7 @@ mod integration_tests {
         let key1 = format_key("Hello World");
         let key2 = format_key("Hello World");
         assert_eq!(key1, key2);
-        
+
         // Different strings should have different keys
         let key3 = format_key("Welcome");
         assert_ne!(key1, key3);
@@ -495,11 +517,11 @@ mod integration_tests {
     fn test_mixed_case_filtering() {
         let extractor = SwcStringExtractor;
         let excluded = vec![];
-        
+
         // PascalCase names (likely component names)
         assert!(!extractor.should_extract("MyComponent", &excluded));
         assert!(!extractor.should_extract("FormField", &excluded));
-        
+
         // Regular sentences with capitals should be extracted
         assert!(extractor.should_extract("Hello There", &excluded));
         assert!(extractor.should_extract("Welcome Back", &excluded));

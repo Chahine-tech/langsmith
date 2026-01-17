@@ -49,7 +49,14 @@ impl TranslateKeysUseCase {
             }
 
             // 3. Write translated file
-            let output_file = source_file.parent().unwrap().join(format!("{}.json", target_lang));
+            let output_file = source_file
+                .parent()
+                .ok_or_else(|| anyhow::anyhow!(
+                    "Cannot extract parent directory from path: {}",
+                    source_file.display()
+                ))?
+                .join(format!("{}.json", target_lang));
+
             let json = serde_json::to_string_pretty(&translated.translations)?;
             std::fs::write(&output_file, json)?;
 

@@ -10,10 +10,14 @@ impl SimpleImportManager {
     fn has_import(content: &str, import_statement: &str) -> bool {
         // Extract the package name from import statement
         // e.g., "import { useTranslation } from 'react-i18next';" -> react-i18next
-        let re = Regex::new(r#"from\s+['"]([^'"]+)['"]"#).unwrap();
+        // Regex compile-time unwrap is safe (compile-time constant)
+        let re = Regex::new(r#"from\s+['"]([^'"]+)['"]"#).expect("invalid regex");
         if let Some(cap) = re.captures(import_statement) {
-            let package = cap.get(1).unwrap().as_str();
-            content.contains(package)
+            if let Some(package) = cap.get(1) {
+                content.contains(package.as_str())
+            } else {
+                false
+            }
         } else {
             false
         }
@@ -22,8 +26,9 @@ impl SimpleImportManager {
     /// Find the position to insert new imports (after last existing import)
     fn find_import_insertion_point(content: &str) -> usize {
         // Find last import statement
+        // Regex compile-time unwrap is safe (compile-time constant)
         let re_pattern = r#"(?m)^import\s+.*from\s+['"][^'"]+['"];?\s*$"#;
-        let re = Regex::new(re_pattern).unwrap();
+        let re = Regex::new(re_pattern).expect("invalid regex");
 
         if let Some(last_match) = re.find_iter(content).last() {
             // Insert after last import

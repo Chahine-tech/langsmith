@@ -40,13 +40,18 @@ impl ReplaceStringsUseCase {
             }
 
             // Replace strings
-            let mut content = replacer.replace_in_file(&file_path, &keys_to_replace, &strategy).await?;
+            let mut content = replacer.replace_in_file(&file_path, &keys_to_replace, &strategy)
+                .await?;
 
             // Add imports
             content = import_mgr.ensure_import(&content, file_type, &strategy).await?;
 
             if dry_run {
-                println!("Would replace {} strings in {}", keys_to_replace.len(), file_path.display());
+                println!(
+                    "Would replace {} strings in {}",
+                    keys_to_replace.len(),
+                    file_path.display()
+                );
                 for key in &keys_to_replace {
                     println!("  - Line {}: \"{}\" -> t(\"{}\")", key.line, key.source, key.id);
                 }
@@ -57,11 +62,15 @@ impl ReplaceStringsUseCase {
             let output_path = if in_place {
                 file_path.clone()
             } else {
-                Self::create_i18n_filename(&file_path)
+                Self::create_i18n_filename(&file_path)?
             };
 
             fs::write(&output_path, content).await?;
-            tracing::info!("✓ Replaced {} strings in {}", keys_to_replace.len(), output_path.display());
+            tracing::info!(
+                "✓ Replaced {} strings in {}",
+                keys_to_replace.len(),
+                output_path.display()
+            );
         }
 
         Ok(())
@@ -73,12 +82,38 @@ impl ReplaceStringsUseCase {
         Ok(translations)
     }
 
-    fn create_i18n_filename(path: &Path) -> PathBuf {
-        // App.tsx -> App.i18n.tsx
-        let stem = path.file_stem().unwrap().to_string_lossy();
-        let ext = path.extension().unwrap().to_string_lossy();
-        let parent = path.parent().unwrap();
-        parent.join(format!("{}.i18n.{}", stem, ext))
+    /// Creates a new filename with .i18n. prefix before the extension
+    ///
+    /// # Examples
+    /// App.tsx -> App.i18n.tsx
+    ///
+    /// # Errors
+    /// Returns an error if the path has no file stem or extension
+    fn create_i18n_filename(path: &Path) -> anyhow::Result<PathBuf> {
+        let stem = path
+            .file_stem()
+            .ok_or_else(|| anyhow::anyhow!(
+                "Cannot extract file stem from path: {}",
+                path.display()
+            ))?
+            .to_string_lossy();
+
+        let ext = path
+            .extension()
+            .ok_or_else(|| anyhow::anyhow!(
+                "Cannot extract file extension from path: {}",
+                path.display()
+            ))?
+            .to_string_lossy();
+
+        let parent = path
+            .parent()
+            .ok_or_else(|| anyhow::anyhow!(
+                "Cannot extract parent directory from path: {}",
+                path.display()
+            ))?;
+
+        Ok(parent.join(format!("{}.i18n.{}", stem, ext)))
     }
 
     /// Helper to extract with positions, gracefully falling back
@@ -90,7 +125,7 @@ impl ReplaceStringsUseCase {
         // Try to use SwcStringExtractor's extended method if available
         // For now, convert from basic extraction
         let basic_keys = extractor.extract(path, file_type).await?;
-        
+
         // Re-extract with positions using a temporary SwcStringExtractor instance
         // This is a workaround until we can make the trait method available
         let content = fs::read_to_string(path).await?;

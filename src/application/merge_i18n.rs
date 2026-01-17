@@ -40,8 +40,8 @@ impl MergeI18nUseCase {
 
         // For each .i18n.* file, find the corresponding original
         for i18n_path in i18n_files.keys() {
-            let original_path = Self::get_original_path(i18n_path);
-            
+            let original_path = Self::get_original_path(i18n_path)?;
+
             // Check if original file exists
             if original_path.exists() {
                 let metadata = fs::metadata(&i18n_path).await?;
@@ -70,10 +70,20 @@ impl MergeI18nUseCase {
 
         println!("  Files to merge:");
         for (idx, merge_file) in summary.files_to_merge.iter().enumerate() {
-            let i18n_name = merge_file.i18n_file.file_name().unwrap().to_string_lossy();
-            let original_name = merge_file.original_file.file_name().unwrap().to_string_lossy();
+            let i18n_name = merge_file
+                .i18n_file
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .unwrap_or_default();
+
+            let original_name = merge_file
+                .original_file
+                .file_name()
+                .map(|n| n.to_string_lossy())
+                .unwrap_or_default();
+
             let size_kb = merge_file.file_size as f64 / 1024.0;
-            
+
             println!("  {}. {} ({:.1} KB)", idx + 1, i18n_name, size_kb);
             println!("     {} {}", "→".dimmed(), original_name.bold());
         }
@@ -94,10 +104,7 @@ impl MergeI18nUseCase {
                 }
                 Err(e) => {
                     failed += 1;
-                    errors.push((
-                        merge_file.i18n_file.clone(),
-                        e.to_string(),
-                    ));
+                    errors.push((merge_file.i18n_file.clone(), e.to_string()));
                 }
             }
         }
@@ -130,19 +137,37 @@ impl MergeI18nUseCase {
     }
 
     /// Removes .i18n.* suffix from filename
-    fn get_original_path(i18n_path: &Path) -> PathBuf {
-        let file_name = i18n_path.file_name().unwrap().to_string_lossy();
-        
+    ///
+    /// # Examples
+    /// "App.i18n.tsx" -> "App.tsx"
+    ///
+    /// # Errors
+    /// Returns an error if the path has no file name
+    fn get_original_path(i18n_path: &Path) -> anyhow::Result<PathBuf> {
+        let file_name = i18n_path
+            .file_name()
+            .ok_or_else(|| anyhow::anyhow!(
+                "Cannot extract file name from path: {}",
+                i18n_path.display()
+            ))?
+            .to_string_lossy();
+
         // Find .i18n. and remove it with the extension after
         if let Some(i18n_index) = file_name.find(".i18n.") {
             let base_name = &file_name[..i18n_index];
             let ext_start = i18n_index + 6; // ".i18n." length
             let extension = &file_name[ext_start..];
-            
-            let parent = i18n_path.parent().unwrap();
-            parent.join(format!("{}.{}", base_name, extension))
+
+            let parent = i18n_path
+                .parent()
+                .ok_or_else(|| anyhow::anyhow!(
+                    "Cannot extract parent directory from path: {}",
+                    i18n_path.display()
+                ))?;
+
+            Ok(parent.join(format!("{}.{}", base_name, extension)))
         } else {
-            i18n_path.to_path_buf()
+            Ok(i18n_path.to_path_buf())
         }
     }
 }
