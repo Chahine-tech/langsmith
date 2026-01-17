@@ -20,6 +20,7 @@ impl Cli {
             Command::Extract(cmd) => cmd.run().await,
             Command::Translate(cmd) => cmd.run().await,
             Command::Replace(cmd) => cmd.run().await,
+            Command::Merge(cmd) => cmd.run().await,
         }
     }
 }

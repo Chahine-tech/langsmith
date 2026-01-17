@@ -1,6 +1,7 @@
 pub mod extract;
 pub mod translate;
 pub mod replace;
+pub mod merge;
 
 use clap::Subcommand;
 
@@ -12,4 +13,6 @@ pub enum Command {
     Translate(translate::TranslateCmd),
     /// Replace hardcoded strings with translation function calls
     Replace(replace::ReplaceCmd),
+    /// Merge .i18n.* files back to original files
+    Merge(merge::MergeCmd),
 }
