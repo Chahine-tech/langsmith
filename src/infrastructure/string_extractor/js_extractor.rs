@@ -1,5 +1,5 @@
 use crate::domain::ports::StringExtractor;
-use crate::domain::models::{TranslationKey, FileType};
+use crate::domain::models::{TranslationKey, FileType, TranslationKeyWithPosition, QuoteType};
 use async_trait::async_trait;
 use std::path::Path;
 use regex::Regex;
@@ -64,7 +64,74 @@ impl StringExtractor for SwcStringExtractor {
     }
 }
 
+/// Extended extraction with position tracking for string replacement
+#[allow(dead_code)]
 impl SwcStringExtractor {
+    /// Extract strings with byte position tracking
+    pub async fn extract_with_positions(&self, path: &Path, _file_type: FileType) 
+        -> anyhow::Result<Vec<TranslationKeyWithPosition>>
+    {
+        let content = std::fs::read_to_string(path)?;
+        let mut keys = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+
+        let excluded = self.get_excluded_strings();
+
+        // Match double-quoted strings
+        if let Ok(re) = Regex::new(r#""([^"\\]|\\.)*""#) {
+            for cap in re.find_iter(&content) {
+                let match_range = cap.range();
+                if let Some(text) = cap.as_str().strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
+                    if self.should_extract(text, &excluded) {
+                        let key = format_key(text);
+                        if !seen.contains(&key) {
+                            let line = content[..match_range.start].lines().count();
+                            
+                            keys.push(TranslationKeyWithPosition {
+                                id: key.clone(),
+                                source: text.to_string(),
+                                file_path: path.to_string_lossy().to_string(),
+                                line,
+                                start_byte: match_range.start,
+                                end_byte: match_range.end,
+                                quote_type: QuoteType::Double,
+                            });
+                            seen.insert(key);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Match single-quoted strings
+        if let Ok(re) = Regex::new(r"'([^'\\]|\\.)*'") {
+            for cap in re.find_iter(&content) {
+                let match_range = cap.range();
+                if let Some(text) = cap.as_str().strip_prefix('\'').and_then(|s| s.strip_suffix('\'')) {
+                    if self.should_extract(text, &excluded) {
+                        let key = format_key(text);
+                        if !seen.contains(&key) {
+                            let line = content[..match_range.start].lines().count();
+                            
+                            keys.push(TranslationKeyWithPosition {
+                                id: key.clone(),
+                                source: text.to_string(),
+                                file_path: path.to_string_lossy().to_string(),
+                                line,
+                                start_byte: match_range.start,
+                                end_byte: match_range.end,
+                                quote_type: QuoteType::Single,
+                            });
+                            seen.insert(key);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(keys)
+    }
+
     /// Check if a string should be extracted
     fn should_extract(&self, text: &str, excluded: &[&str]) -> bool {
         // Skip if too short
@@ -118,10 +185,12 @@ impl SwcStringExtractor {
 
 /// Convert a string to a translation key
 /// "Hello World" -> "hello_world"
+/// "user-profile" -> "user_profile"
 #[allow(dead_code)]
 fn format_key(source: &str) -> String {
     source
         .to_lowercase()
+        .replace("-", "_")
         .split_whitespace()
         .collect::<Vec<_>>()
         .join("_")
@@ -139,5 +208,6 @@ mod tests {
         assert_eq!(format_key("Hello World"), "hello_world");
         assert_eq!(format_key("Click Me!"), "click_me");
         assert_eq!(format_key("user-profile"), "user_profile");
+        assert_eq!(format_key("User Profile"), "user_profile");
     }
 }

@@ -19,6 +19,7 @@ impl Cli {
         match self.command {
             Command::Extract(cmd) => cmd.run().await,
             Command::Translate(cmd) => cmd.run().await,
+            Command::Replace(cmd) => cmd.run().await,
         }
     }
 }

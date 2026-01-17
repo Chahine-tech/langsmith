@@ -1,4 +1,4 @@
-use crate::domain::models::{TranslationKey, LanguageFile, FileType};
+use crate::domain::models::{TranslationKey, LanguageFile, FileType, TranslationKeyWithPosition, ReplacementStrategy};
 use async_trait::async_trait;
 use std::path::Path;
 
@@ -35,4 +35,30 @@ pub trait FileScanner: Send + Sync {
 pub trait Translator: Send + Sync {
     /// Translate text to target language
     async fn translate(&self, text: &str, target_lang: &str) -> anyhow::Result<String>;
+}
+
+/// Port: Responsible for replacing strings in source code
+#[async_trait]
+#[allow(unused)]
+pub trait CodeReplacer: Send + Sync {
+    /// Replace strings in a file with translation function calls
+    async fn replace_in_file(
+        &self,
+        file_path: &Path,
+        keys: &[TranslationKeyWithPosition],
+        strategy: &ReplacementStrategy,
+    ) -> anyhow::Result<String>;
+}
+
+/// Port: Responsible for managing import statements
+#[async_trait]
+#[allow(unused)]
+pub trait ImportManager: Send + Sync {
+    /// Add or update import statements in file content
+    async fn ensure_import(
+        &self,
+        content: &str,
+        file_type: FileType,
+        strategy: &ReplacementStrategy,
+    ) -> anyhow::Result<String>;
 }

@@ -1,1 +1,13 @@
 /target
+
+# Generated i18n replacement files (created by langsmith replace command)
+*.i18n.tsx
+*.i18n.ts
+*.i18n.jsx
+*.i18n.js
+*.i18n.vue
+
+# Node modules (for examples)
+node_modules/
+package-lock.json
+yarn.lock
