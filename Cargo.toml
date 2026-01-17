@@ -4,44 +4,21 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-# CLI & Arguments
 clap = { version = "4.5", features = ["derive"] }
-
-# Parsing & AST
 regex = "1.12"
-
-# Async runtime
 tokio = { version = "1.49", features = ["full"] }
-
-# JSON handling
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-
-# HTTP client (for future API integration)
 reqwest = { version = "0.11", features = ["json"] }
-
-# File operations
 walkdir = "2.4"
 ignore = "0.4"
-
-# Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
-
-# Configuration
 toml = "0.8"
-
-# Error handling
 anyhow = "1.0"
 thiserror = "1.0"
-
-# Async traits
 async-trait = "0.1"
-
-# Progress & UI
 indicatif = "0.17"
 owo-colors = "4.0"
-
-# Testing
 assert_cmd = "2.0"
 predicates = "3.1"

@@ -1,5 +1,8 @@
 use clap::Parser;
 use std::path::PathBuf;
+use crate::application::ExtractStringsUseCase;
+use crate::infrastructure::{FileSystemScanner, FileSystemWriter, SwcStringExtractor};
+use crate::cli::presenter::Presenter;
 
 #[derive(Parser, Debug)]
 pub struct ExtractCmd {
@@ -18,8 +21,40 @@ pub struct ExtractCmd {
 
 impl ExtractCmd {
     pub async fn run(self) -> anyhow::Result<()> {
-        println!("Extracting strings from {:?}", self.source);
-        println!("Output to {:?}", self.output);
+        Presenter::header("🌍 Langsmith - String Extraction");
+
+        // Validate paths
+        if !self.source.exists() {
+            Presenter::error(format!("Source directory not found: {:?}", self.source));
+            return Err(anyhow::anyhow!("Source directory not found"));
+        }
+
+        if !self.source.is_dir() {
+            Presenter::error(format!("Source is not a directory: {:?}", self.source));
+            return Err(anyhow::anyhow!("Source is not a directory"));
+        }
+
+        Presenter::info(format!("Scanning: {:?}", self.source));
+        Presenter::info(format!("Output: {:?}", self.output));
+        Presenter::info(format!("Base language: {}", self.lang));
+
+        // Initialize infrastructure
+        let scanner = FileSystemScanner;
+        let extractor = SwcStringExtractor;
+        let writer = FileSystemWriter;
+
+        // Execute use case
+        ExtractStringsUseCase::execute(
+            &self.source,
+            &self.output,
+            &self.lang,
+            &scanner,
+            &extractor,
+            &writer,
+        )
+        .await?;
+
+        Presenter::success("Extraction complete!");
         Ok(())
     }
 }

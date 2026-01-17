@@ -17,19 +17,24 @@ impl StringExtractor for SwcStringExtractor {
         let mut keys = Vec::new();
         let mut seen = std::collections::HashSet::new();
 
+        // List of strings to exclude (imports, package names, etc)
+        let excluded = self.get_excluded_strings();
+
         // Match double-quoted strings
         if let Ok(re) = Regex::new(r#""([^"\\]|\\.)*""#) {
             for cap in re.find_iter(&content) {
                 if let Some(text) = cap.as_str().strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
-                    let key = format_key(text);
-                    if !seen.contains(&key) {
-                        keys.push(TranslationKey {
-                            id: key.clone(),
-                            source: text.to_string(),
-                            file_path: path.to_string_lossy().to_string(),
-                            line: 0,
-                        });
-                        seen.insert(key);
+                    if self.should_extract(text, &excluded) {
+                        let key = format_key(text);
+                        if !seen.contains(&key) {
+                            keys.push(TranslationKey {
+                                id: key.clone(),
+                                source: text.to_string(),
+                                file_path: path.to_string_lossy().to_string(),
+                                line: 0,
+                            });
+                            seen.insert(key);
+                        }
                     }
                 }
             }
@@ -39,21 +44,75 @@ impl StringExtractor for SwcStringExtractor {
         if let Ok(re) = Regex::new(r"'([^'\\]|\\.)*'") {
             for cap in re.find_iter(&content) {
                 if let Some(text) = cap.as_str().strip_prefix('\'').and_then(|s| s.strip_suffix('\'')) {
-                    let key = format_key(text);
-                    if !seen.contains(&key) && text.len() > 2 {
-                        keys.push(TranslationKey {
-                            id: key.clone(),
-                            source: text.to_string(),
-                            file_path: path.to_string_lossy().to_string(),
-                            line: 0,
-                        });
-                        seen.insert(key);
+                    if self.should_extract(text, &excluded) {
+                        let key = format_key(text);
+                        if !seen.contains(&key) {
+                            keys.push(TranslationKey {
+                                id: key.clone(),
+                                source: text.to_string(),
+                                file_path: path.to_string_lossy().to_string(),
+                                line: 0,
+                            });
+                            seen.insert(key);
+                        }
                     }
                 }
             }
         }
 
         Ok(keys)
+    }
+}
+
+impl SwcStringExtractor {
+    /// Check if a string should be extracted
+    fn should_extract(&self, text: &str, excluded: &[&str]) -> bool {
+        // Skip if too short
+        if text.len() < 3 {
+            return false;
+        }
+
+        // Skip if in excluded list
+        if excluded.contains(&text) {
+            return false;
+        }
+
+        // Skip pure package names or imports
+        if text.chars().all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/') && text.len() < 20 {
+            return false;
+        }
+
+        // Skip if starts with @ (scoped packages)
+        if text.starts_with('@') {
+            return false;
+        }
+
+        // Skip if looks like a path
+        if text.contains("./") || text.contains("../") {
+            return false;
+        }
+
+        true
+    }
+
+    /// List of strings that should not be extracted
+    fn get_excluded_strings(&self) -> Vec<&'static str> {
+        vec![
+            "react",
+            "tsx",
+            "jsx",
+            "javascript",
+            "typescript",
+            "vue",
+            "angular",
+            "svelte",
+            "next",
+            "remix",
+            "gatsby",
+            "node_modules",
+            "dist",
+            "build",
+        ]
     }
 }
 

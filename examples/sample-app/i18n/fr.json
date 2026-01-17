@@ -1,0 +1,18 @@
+{
+  "cancel": "Cancel",
+  "save_changes": "Save changes",
+  "about": "About",
+  "something_went_wrong_please_try_again": "Something went wrong. Please try again.",
+  "welcome_to_langsmith": "Welcome to Langsmith",
+  "enter_your_name": "Enter your name",
+  "contact": "Contact",
+  "frfr": "fr-FR",
+  "login": "Login",
+  "failed_to_fetch_user": "Failed to fetch user",
+  "an_error_occurred": "An error occurred",
+  "loading": "Loading...",
+  "password_must_be_at_least_8_characters": "Password must be at least 8 characters",
+  "home": "Home",
+  "logout": "Logout",
+  "please_enter_a_valid_email_address": "Please enter a valid email address"
+}
