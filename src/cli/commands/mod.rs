@@ -1,4 +1,5 @@
 pub mod extract;
+pub mod translate;
 
 use clap::Subcommand;
 
@@ -6,4 +7,6 @@ use clap::Subcommand;
 pub enum Command {
     /// Extract translatable strings from your codebase
     Extract(extract::ExtractCmd),
+    /// Translate extracted strings to target languages
+    Translate(translate::TranslateCmd),
 }

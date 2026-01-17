@@ -1,0 +1,18 @@
+{
+  "cancel": "Cancelar",
+  "something_went_wrong_please_try_again": "Algo salió mal. Inténtalo de nuevo.",
+  "failed_to_fetch_user": "No se pudo recuperar el usuario.",
+  "enter_your_name": "Introduzca su nombre",
+  "login": "Iniciar sesión",
+  "about": "Acerca de",
+  "home": "Inicio",
+  "password_must_be_at_least_8_characters": "La contraseña debe tener al menos 8 caracteres.",
+  "please_enter_a_valid_email_address": "Introduzca una dirección de correo electrónico válida.",
+  "contact": "Contacto",
+  "save_changes": "Guardar cambios",
+  "logout": "Cerrar sesión",
+  "an_error_occurred": "Se ha producido un error.",
+  "welcome_to_langsmith": "Bienvenido a Langsmith",
+  "frfr": "Francés-francés",
+  "loading": "Cargando..."
+}
