@@ -2,11 +2,14 @@ pub mod extract;
 pub mod translate;
 pub mod replace;
 pub mod merge;
+pub mod setup;
 
 use clap::Subcommand;
 
 #[derive(Subcommand, Debug)]
 pub enum Command {
+    /// Interactive setup wizard (recommended for first-time users)
+    Setup(setup::SetupCmd),
     /// Extract translatable strings from your codebase
     Extract(extract::ExtractCmd),
     /// Translate extracted strings to target languages

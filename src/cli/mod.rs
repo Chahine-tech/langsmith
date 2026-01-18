@@ -1,5 +1,7 @@
 pub mod commands;
 pub mod presenter;
+pub mod wizard;
+pub mod progress;
 
 use clap::Parser;
 use commands::Command;
@@ -17,6 +19,7 @@ pub struct Cli {
 impl Cli {
     pub async fn execute(self) -> anyhow::Result<()> {
         match self.command {
+            Command::Setup(cmd) => cmd.run().await,
             Command::Extract(cmd) => cmd.run().await,
             Command::Translate(cmd) => cmd.run().await,
             Command::Replace(cmd) => cmd.run().await,
