@@ -1,8 +1,8 @@
+use crate::application::ExtractStringsUseCase;
+use crate::cli::presenter::Presenter;
+use crate::infrastructure::{FileSystemScanner, FileSystemWriter, SwcStringExtractor};
 use clap::Parser;
 use std::path::PathBuf;
-use crate::application::ExtractStringsUseCase;
-use crate::infrastructure::{FileSystemScanner, FileSystemWriter, SwcStringExtractor};
-use crate::cli::presenter::Presenter;
 
 #[derive(Parser, Debug)]
 pub struct ExtractCmd {

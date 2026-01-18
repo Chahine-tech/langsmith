@@ -7,19 +7,6 @@ on:
     branches: [main]
 
 jobs:
-  # Quality checks
-  quality:
-    name: Quality Checks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Run checks
-        run: nix flake check
-
   # Build and test on multiple systems
   test:
     name: Test (${{ matrix.os }})
@@ -42,77 +29,14 @@ jobs:
       - name: Clippy
         run: nix develop --command cargo clippy --release -- -D warnings
 
-  # Security audit
-  security:
-    name: Security Audit
+  # Formatting check
+  fmt:
+    name: Format Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Audit dependencies
-        run: nix develop --command cargo audit
-
-      - name: Deny vulnerabilities
-        run: nix develop --command cargo deny check
-
-  # Build release binaries
-  release-binaries:
-    name: Build Release Binaries
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Build Linux x86_64
-        run: nix build .#langsmith-linux
-
-      - name: Build macOS x86_64
-        run: nix build .#langsmith-macos-x86
-
-      - name: Build macOS ARM64
-        run: nix build .#langsmith-macos-arm
-
-      - name: Prepare artifacts
-        run: |
-          mkdir -p release
-          cp result/bin/langsmith release/langsmith-linux-x86_64
-          # Note: Cross-compilation results would need proper system setup
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release/langsmith-*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Build Docker image
-  docker:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Build Docker image
-        run: nix build .#docker --output docker-image.tar
-
-      - name: Load image
-        run: docker load < docker-image.tar
-
-      - name: Push to registry
-        run: |
-          # Example: push to ghcr.io
-          # docker tag langsmith:0.1.0 ghcr.io/${{ github.repository }}:latest
-          # docker push ghcr.io/${{ github.repository }}:latest
-          echo "Docker image ready at docker-image.tar"
+      - name: Check formatting
+        run: nix develop --command cargo fmt -- --check

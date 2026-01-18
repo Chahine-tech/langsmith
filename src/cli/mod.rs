@@ -1,7 +1,7 @@
 pub mod commands;
 pub mod presenter;
-pub mod wizard;
 pub mod progress;
+pub mod wizard;
 
 use clap::Parser;
 use commands::Command;

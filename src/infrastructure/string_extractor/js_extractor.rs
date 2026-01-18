@@ -1,15 +1,19 @@
+use crate::domain::models::{FileType, QuoteType, TranslationKey, TranslationKeyWithPosition};
 use crate::domain::ports::StringExtractor;
-use crate::domain::models::{TranslationKey, FileType, TranslationKeyWithPosition, QuoteType};
 use async_trait::async_trait;
-use std::path::Path;
 use regex::Regex;
+use std::path::Path;
 
 #[allow(dead_code)]
 pub struct SwcStringExtractor;
 
 #[async_trait]
 impl StringExtractor for SwcStringExtractor {
-    async fn extract(&self, path: &Path, file_type: FileType) -> anyhow::Result<Vec<TranslationKey>> {
+    async fn extract(
+        &self,
+        path: &Path,
+        file_type: FileType,
+    ) -> anyhow::Result<Vec<TranslationKey>> {
         let keys_with_pos = self.extract_with_positions(path, file_type).await?;
 
         // Convert from TranslationKeyWithPosition to TranslationKey
@@ -44,7 +48,11 @@ impl SwcStringExtractor {
         if let Ok(re) = Regex::new(r#""([^"\\]|\\.)*""#) {
             for cap in re.find_iter(&content) {
                 let match_range = cap.range();
-                if let Some(text) = cap.as_str().strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
+                if let Some(text) = cap
+                    .as_str()
+                    .strip_prefix('"')
+                    .and_then(|s| s.strip_suffix('"'))
+                {
                     if self.should_extract(text, &excluded) {
                         let key = format_key(text);
                         if !seen.contains(&key) {
@@ -70,7 +78,11 @@ impl SwcStringExtractor {
         if let Ok(re) = Regex::new(r"'([^'\\]|\\.)*'") {
             for cap in re.find_iter(&content) {
                 let match_range = cap.range();
-                if let Some(text) = cap.as_str().strip_prefix('\'').and_then(|s| s.strip_suffix('\'')) {
+                if let Some(text) = cap
+                    .as_str()
+                    .strip_prefix('\'')
+                    .and_then(|s| s.strip_suffix('\''))
+                {
                     if self.should_extract(text, &excluded) {
                         let key = format_key(text);
                         if !seen.contains(&key) {
@@ -96,7 +108,11 @@ impl SwcStringExtractor {
         if let Ok(re) = Regex::new(r"`([^\`\\]|\\.)*`") {
             for cap in re.find_iter(&content) {
                 let match_range = cap.range();
-                if let Some(text) = cap.as_str().strip_prefix('`').and_then(|s| s.strip_suffix('`')) {
+                if let Some(text) = cap
+                    .as_str()
+                    .strip_prefix('`')
+                    .and_then(|s| s.strip_suffix('`'))
+                {
                     // Skip template literals with expressions: ${...}
                     if !text.contains("${") {
                         if self.should_extract(text, &excluded) {
@@ -126,7 +142,10 @@ impl SwcStringExtractor {
             for cap in re.find_iter(&content) {
                 let match_str = cap.as_str();
                 // Extract text between > and </
-                if let Some(text) = match_str.strip_prefix('>').and_then(|s| s.strip_suffix("</")) {
+                if let Some(text) = match_str
+                    .strip_prefix('>')
+                    .and_then(|s| s.strip_suffix("</"))
+                {
                     let text = text.trim();
 
                     // Skip empty strings
@@ -238,7 +257,9 @@ impl SwcStringExtractor {
         }
 
         // Skip pure package names or imports (lowercase with dashes/underscores)
-        if text.chars().all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/')
+        if text
+            .chars()
+            .all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/')
             && text.len() < 20
         {
             return false;

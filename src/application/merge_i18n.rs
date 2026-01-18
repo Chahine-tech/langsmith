@@ -1,7 +1,7 @@
+use owo_colors::OwoColorize;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
-use std::collections::HashMap;
-use owo_colors::OwoColorize;
 
 pub struct MergeI18nUseCase;
 
@@ -61,7 +61,10 @@ impl MergeI18nUseCase {
 
     /// Displays a preview of changes to be merged
     pub fn show_preview(summary: &MergeSummary) {
-        println!("\n  Summary: {} .i18n.* files ready to merge\n", summary.total_files);
+        println!(
+            "\n  Summary: {} .i18n.* files ready to merge\n",
+            summary.total_files
+        );
 
         if summary.files_to_merge.is_empty() {
             println!("  No .i18n.* files found to merge.");
@@ -146,10 +149,12 @@ impl MergeI18nUseCase {
     fn get_original_path(i18n_path: &Path) -> anyhow::Result<PathBuf> {
         let file_name = i18n_path
             .file_name()
-            .ok_or_else(|| anyhow::anyhow!(
-                "Cannot extract file name from path: {}",
-                i18n_path.display()
-            ))?
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Cannot extract file name from path: {}",
+                    i18n_path.display()
+                )
+            })?
             .to_string_lossy();
 
         // Find .i18n. and remove it with the extension after
@@ -158,12 +163,12 @@ impl MergeI18nUseCase {
             let ext_start = i18n_index + 6; // ".i18n." length
             let extension = &file_name[ext_start..];
 
-            let parent = i18n_path
-                .parent()
-                .ok_or_else(|| anyhow::anyhow!(
+            let parent = i18n_path.parent().ok_or_else(|| {
+                anyhow::anyhow!(
                     "Cannot extract parent directory from path: {}",
                     i18n_path.display()
-                ))?;
+                )
+            })?;
 
             Ok(parent.join(format!("{}.{}", base_name, extension)))
         } else {

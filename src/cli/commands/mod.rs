@@ -1,8 +1,8 @@
 pub mod extract;
-pub mod translate;
-pub mod replace;
 pub mod merge;
+pub mod replace;
 pub mod setup;
+pub mod translate;
 
 use clap::Subcommand;
 

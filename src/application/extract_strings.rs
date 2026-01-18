@@ -1,7 +1,7 @@
-use crate::domain::ports::{StringExtractor, FileWriter, FileScanner};
 use crate::domain::models::LanguageFile;
-use std::path::Path;
+use crate::domain::ports::{FileScanner, FileWriter, StringExtractor};
 use std::collections::HashMap;
+use std::path::Path;
 
 /// Use case: Extract all translatable strings from a codebase
 #[allow(dead_code)]
@@ -39,7 +39,9 @@ impl ExtractStringsUseCase {
         }
 
         let output_file = output_path.join(format!("{}.json", base_language));
-        writer.write_language_file(&output_file, &language_file).await?;
+        writer
+            .write_language_file(&output_file, &language_file)
+            .await?;
 
         Ok(())
     }

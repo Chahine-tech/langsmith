@@ -42,10 +42,7 @@ impl ConfigManager {
     /// 1. CLI flag (highest)
     /// 2. Environment variable
     /// 3. Error (lowest)
-    pub fn get_api_config(
-        provider: &str,
-        cli_api_key: Option<&str>,
-    ) -> anyhow::Result<ApiConfig> {
+    pub fn get_api_config(provider: &str, cli_api_key: Option<&str>) -> anyhow::Result<ApiConfig> {
         let provider = ApiProvider::from_str(provider)?;
 
         // Priority 1: CLI flag
@@ -88,11 +85,11 @@ mod tests {
     #[test]
     fn test_provider_from_str() {
         assert_eq!(ApiProvider::from_str("deepl").unwrap(), ApiProvider::DeepL);
-        assert_eq!(ApiProvider::from_str("openai").unwrap(), ApiProvider::OpenAI);
         assert_eq!(
-            ApiProvider::from_str("DEEPL").unwrap(),
-            ApiProvider::DeepL
+            ApiProvider::from_str("openai").unwrap(),
+            ApiProvider::OpenAI
         );
+        assert_eq!(ApiProvider::from_str("DEEPL").unwrap(), ApiProvider::DeepL);
         assert!(ApiProvider::from_str("invalid").is_err());
     }
 

@@ -1,8 +1,8 @@
+use crate::application::replace_strings::ReplaceStringsUseCase;
+use crate::domain::models::ReplacementStrategy;
+use crate::infrastructure::*;
 use clap::Parser;
 use std::path::PathBuf;
-use crate::domain::models::ReplacementStrategy;
-use crate::application::replace_strings::ReplaceStringsUseCase;
-use crate::infrastructure::*;
 
 #[derive(Parser, Debug)]
 pub struct ReplaceCmd {
@@ -59,7 +59,8 @@ impl ReplaceCmd {
             &extractor,
             &replacer,
             &import_mgr,
-        ).await?;
+        )
+        .await?;
 
         println!("\n✓ Replacement complete!");
 

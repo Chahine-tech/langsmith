@@ -1,5 +1,5 @@
-pub mod regex_replacer;
 pub mod import_manager;
+pub mod regex_replacer;
 
-pub use regex_replacer::RegexReplacer;
 pub use import_manager::SimpleImportManager;
+pub use regex_replacer::RegexReplacer;

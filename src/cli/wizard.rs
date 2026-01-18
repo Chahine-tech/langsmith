@@ -1,7 +1,7 @@
-use dialoguer::{Select, Input, MultiSelect, Confirm};
+use anyhow::Result;
+use dialoguer::{Confirm, Input, MultiSelect, Select};
 use owo_colors::OwoColorize;
 use std::path::PathBuf;
-use anyhow::Result;
 
 pub struct WizardConfig {
     pub framework: Framework,
@@ -75,7 +75,10 @@ impl Wizard {
     }
 
     fn print_welcome() {
-        println!("\n{}\n", "🧙 Langsmith Interactive Setup".bold().underline());
+        println!(
+            "\n{}\n",
+            "🧙 Langsmith Interactive Setup".bold().underline()
+        );
         println!("This wizard will guide you through setting up i18n for your project.\n");
     }
 
