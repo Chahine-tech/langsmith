@@ -7,36 +7,29 @@ on:
     branches: [main]
 
 jobs:
-  # Build and test on multiple systems
   test:
     name: Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Build
-        run: nix build
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
 
       - name: Test
-        run: nix develop --command cargo test --release
+        run: cargo test --release
 
       - name: Clippy
-        run: nix develop --command cargo clippy --release -- -D warnings
+        run: cargo clippy --release -- -D warnings
 
-  # Formatting check
   fmt:
     name: Format Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
 
-      - uses: DeterminateSystems/nix-installer-action@main
-
-      - name: Check formatting
-        run: nix develop --command cargo fmt -- --check
+      - name: Format
+        run: cargo fmt -- --check
