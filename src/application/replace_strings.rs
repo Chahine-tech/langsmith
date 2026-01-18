@@ -1,12 +1,13 @@
 use crate::domain::models::*;
 use crate::domain::ports::*;
-use std::path::{Path, PathBuf};
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use tokio::fs;
 
 pub struct ReplaceStringsUseCase;
 
 impl ReplaceStringsUseCase {
+    #[allow(clippy::too_many_arguments)]
     pub async fn execute(
         source_path: &Path,
         translation_file: &Path,
@@ -40,11 +41,14 @@ impl ReplaceStringsUseCase {
             }
 
             // Replace strings
-            let mut content = replacer.replace_in_file(&file_path, &keys_to_replace, &strategy)
+            let mut content = replacer
+                .replace_in_file(&file_path, &keys_to_replace, &strategy)
                 .await?;
 
             // Add imports
-            content = import_mgr.ensure_import(&content, file_type, &strategy).await?;
+            content = import_mgr
+                .ensure_import(&content, file_type, &strategy)
+                .await?;
 
             if dry_run {
                 println!(
@@ -53,7 +57,10 @@ impl ReplaceStringsUseCase {
                     file_path.display()
                 );
                 for key in &keys_to_replace {
-                    println!("  - Line {}: \"{}\" -> t(\"{}\")", key.line, key.source, key.id);
+                    println!(
+                        "  - Line {}: \"{}\" -> t(\"{}\")",
+                        key.line, key.source, key.id
+                    );
                 }
                 continue;
             }
@@ -92,26 +99,27 @@ impl ReplaceStringsUseCase {
     fn create_i18n_filename(path: &Path) -> anyhow::Result<PathBuf> {
         let stem = path
             .file_stem()
-            .ok_or_else(|| anyhow::anyhow!(
-                "Cannot extract file stem from path: {}",
-                path.display()
-            ))?
+            .ok_or_else(|| {
+                anyhow::anyhow!("Cannot extract file stem from path: {}", path.display())
+            })?
             .to_string_lossy();
 
         let ext = path
             .extension()
-            .ok_or_else(|| anyhow::anyhow!(
-                "Cannot extract file extension from path: {}",
-                path.display()
-            ))?
+            .ok_or_else(|| {
+                anyhow::anyhow!(
+                    "Cannot extract file extension from path: {}",
+                    path.display()
+                )
+            })?
             .to_string_lossy();
 
-        let parent = path
-            .parent()
-            .ok_or_else(|| anyhow::anyhow!(
+        let parent = path.parent().ok_or_else(|| {
+            anyhow::anyhow!(
                 "Cannot extract parent directory from path: {}",
                 path.display()
-            ))?;
+            )
+        })?;
 
         Ok(parent.join(format!("{}.i18n.{}", stem, ext)))
     }

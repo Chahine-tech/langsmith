@@ -1,15 +1,19 @@
+use crate::domain::models::{FileType, QuoteType, TranslationKey, TranslationKeyWithPosition};
 use crate::domain::ports::StringExtractor;
-use crate::domain::models::{TranslationKey, FileType, TranslationKeyWithPosition, QuoteType};
 use async_trait::async_trait;
-use std::path::Path;
 use regex::Regex;
+use std::path::Path;
 
 #[allow(dead_code)]
 pub struct SwcStringExtractor;
 
 #[async_trait]
 impl StringExtractor for SwcStringExtractor {
-    async fn extract(&self, path: &Path, file_type: FileType) -> anyhow::Result<Vec<TranslationKey>> {
+    async fn extract(
+        &self,
+        path: &Path,
+        file_type: FileType,
+    ) -> anyhow::Result<Vec<TranslationKey>> {
         let keys_with_pos = self.extract_with_positions(path, file_type).await?;
 
         // Convert from TranslationKeyWithPosition to TranslationKey
@@ -44,23 +48,26 @@ impl SwcStringExtractor {
         if let Ok(re) = Regex::new(r#""([^"\\]|\\.)*""#) {
             for cap in re.find_iter(&content) {
                 let match_range = cap.range();
-                if let Some(text) = cap.as_str().strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
-                    if self.should_extract(text, &excluded) {
-                        let key = format_key(text);
-                        if !seen.contains(&key) {
-                            let line = content[..match_range.start].lines().count();
+                if let Some(text) = cap
+                    .as_str()
+                    .strip_prefix('"')
+                    .and_then(|s| s.strip_suffix('"'))
+                    && self.should_extract(text, &excluded)
+                {
+                    let key = format_key(text);
+                    if !seen.contains(&key) {
+                        let line = content[..match_range.start].lines().count();
 
-                            keys.push(TranslationKeyWithPosition {
-                                id: key.clone(),
-                                source: text.to_string(),
-                                file_path: path.to_string_lossy().to_string(),
-                                line,
-                                start_byte: match_range.start,
-                                end_byte: match_range.end,
-                                quote_type: QuoteType::Double,
-                            });
-                            seen.insert(key);
-                        }
+                        keys.push(TranslationKeyWithPosition {
+                            id: key.clone(),
+                            source: text.to_string(),
+                            file_path: path.to_string_lossy().to_string(),
+                            line,
+                            start_byte: match_range.start,
+                            end_byte: match_range.end,
+                            quote_type: QuoteType::Double,
+                        });
+                        seen.insert(key);
                     }
                 }
             }
@@ -70,23 +77,26 @@ impl SwcStringExtractor {
         if let Ok(re) = Regex::new(r"'([^'\\]|\\.)*'") {
             for cap in re.find_iter(&content) {
                 let match_range = cap.range();
-                if let Some(text) = cap.as_str().strip_prefix('\'').and_then(|s| s.strip_suffix('\'')) {
-                    if self.should_extract(text, &excluded) {
-                        let key = format_key(text);
-                        if !seen.contains(&key) {
-                            let line = content[..match_range.start].lines().count();
+                if let Some(text) = cap
+                    .as_str()
+                    .strip_prefix('\'')
+                    .and_then(|s| s.strip_suffix('\''))
+                    && self.should_extract(text, &excluded)
+                {
+                    let key = format_key(text);
+                    if !seen.contains(&key) {
+                        let line = content[..match_range.start].lines().count();
 
-                            keys.push(TranslationKeyWithPosition {
-                                id: key.clone(),
-                                source: text.to_string(),
-                                file_path: path.to_string_lossy().to_string(),
-                                line,
-                                start_byte: match_range.start,
-                                end_byte: match_range.end,
-                                quote_type: QuoteType::Single,
-                            });
-                            seen.insert(key);
-                        }
+                        keys.push(TranslationKeyWithPosition {
+                            id: key.clone(),
+                            source: text.to_string(),
+                            file_path: path.to_string_lossy().to_string(),
+                            line,
+                            start_byte: match_range.start,
+                            end_byte: match_range.end,
+                            quote_type: QuoteType::Single,
+                        });
+                        seen.insert(key);
                     }
                 }
             }
@@ -96,26 +106,27 @@ impl SwcStringExtractor {
         if let Ok(re) = Regex::new(r"`([^\`\\]|\\.)*`") {
             for cap in re.find_iter(&content) {
                 let match_range = cap.range();
-                if let Some(text) = cap.as_str().strip_prefix('`').and_then(|s| s.strip_suffix('`')) {
-                    // Skip template literals with expressions: ${...}
-                    if !text.contains("${") {
-                        if self.should_extract(text, &excluded) {
-                            let key = format_key(text);
-                            if !seen.contains(&key) {
-                                let line = content[..match_range.start].lines().count();
+                if let Some(text) = cap
+                    .as_str()
+                    .strip_prefix('`')
+                    .and_then(|s| s.strip_suffix('`'))
+                    && !text.contains("${")
+                    && self.should_extract(text, &excluded)
+                {
+                    let key = format_key(text);
+                    if !seen.contains(&key) {
+                        let line = content[..match_range.start].lines().count();
 
-                                keys.push(TranslationKeyWithPosition {
-                                    id: key.clone(),
-                                    source: text.to_string(),
-                                    file_path: path.to_string_lossy().to_string(),
-                                    line,
-                                    start_byte: match_range.start,
-                                    end_byte: match_range.end,
-                                    quote_type: QuoteType::Template,
-                                });
-                                seen.insert(key);
-                            }
-                        }
+                        keys.push(TranslationKeyWithPosition {
+                            id: key.clone(),
+                            source: text.to_string(),
+                            file_path: path.to_string_lossy().to_string(),
+                            line,
+                            start_byte: match_range.start,
+                            end_byte: match_range.end,
+                            quote_type: QuoteType::Template,
+                        });
+                        seen.insert(key);
                     }
                 }
             }
@@ -126,31 +137,33 @@ impl SwcStringExtractor {
             for cap in re.find_iter(&content) {
                 let match_str = cap.as_str();
                 // Extract text between > and </
-                if let Some(text) = match_str.strip_prefix('>').and_then(|s| s.strip_suffix("</")) {
+                if let Some(text) = match_str
+                    .strip_prefix('>')
+                    .and_then(|s| s.strip_suffix("</"))
+                {
                     let text = text.trim();
 
-                    // Skip empty strings
-                    if !text.is_empty() {
-                        // Skip if contains JSX component expressions ${...} or {variables}
-                        if !text.contains("${") && !text.contains("{") {
-                            if self.should_extract(text, &excluded) {
-                                let key = format_key(text);
-                                if !seen.contains(&key) {
-                                    let match_range = cap.range();
-                                    let line = content[..match_range.start].lines().count();
+                    // Skip empty strings and JSX expressions
+                    if !text.is_empty()
+                        && !text.contains("${")
+                        && !text.contains("{")
+                        && self.should_extract(text, &excluded)
+                    {
+                        let key = format_key(text);
+                        if !seen.contains(&key) {
+                            let match_range = cap.range();
+                            let line = content[..match_range.start].lines().count();
 
-                                    keys.push(TranslationKeyWithPosition {
-                                        id: key.clone(),
-                                        source: text.to_string(),
-                                        file_path: path.to_string_lossy().to_string(),
-                                        line,
-                                        start_byte: match_range.start,
-                                        end_byte: match_range.end,
-                                        quote_type: QuoteType::JsxText,
-                                    });
-                                    seen.insert(key);
-                                }
-                            }
+                            keys.push(TranslationKeyWithPosition {
+                                id: key.clone(),
+                                source: text.to_string(),
+                                file_path: path.to_string_lossy().to_string(),
+                                line,
+                                start_byte: match_range.start,
+                                end_byte: match_range.end,
+                                quote_type: QuoteType::JsxText,
+                            });
+                            seen.insert(key);
                         }
                     }
                 }
@@ -164,24 +177,26 @@ impl SwcStringExtractor {
                     let text = attr_value.as_str();
 
                     // Skip empty attributes and expressions
-                    if !text.is_empty() && !text.contains("{") && !text.contains("${") {
-                        if self.should_extract(text, &excluded) {
-                            let key = format_key(text);
-                            if !seen.contains(&key) {
-                                let match_range = attr_value.range();
-                                let line = content[..match_range.start].lines().count();
+                    if !text.is_empty()
+                        && !text.contains("{")
+                        && !text.contains("${")
+                        && self.should_extract(text, &excluded)
+                    {
+                        let key = format_key(text);
+                        if !seen.contains(&key) {
+                            let match_range = attr_value.range();
+                            let line = content[..match_range.start].lines().count();
 
-                                keys.push(TranslationKeyWithPosition {
-                                    id: key.clone(),
-                                    source: text.to_string(),
-                                    file_path: path.to_string_lossy().to_string(),
-                                    line,
-                                    start_byte: match_range.start,
-                                    end_byte: match_range.end,
-                                    quote_type: QuoteType::Double,
-                                });
-                                seen.insert(key);
-                            }
+                            keys.push(TranslationKeyWithPosition {
+                                id: key.clone(),
+                                source: text.to_string(),
+                                file_path: path.to_string_lossy().to_string(),
+                                line,
+                                start_byte: match_range.start,
+                                end_byte: match_range.end,
+                                quote_type: QuoteType::Double,
+                            });
+                            seen.insert(key);
                         }
                     }
                 }
@@ -238,7 +253,9 @@ impl SwcStringExtractor {
         }
 
         // Skip pure package names or imports (lowercase with dashes/underscores)
-        if text.chars().all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/')
+        if text
+            .chars()
+            .all(|c| c.is_lowercase() || c == '-' || c == '_' || c == '/')
             && text.len() < 20
         {
             return false;

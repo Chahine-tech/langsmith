@@ -1,7 +1,7 @@
-use clap::Parser;
-use std::path::PathBuf;
 use crate::application::merge_i18n::MergeI18nUseCase;
+use clap::Parser;
 use owo_colors::OwoColorize;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 pub struct MergeCmd {
@@ -35,19 +35,29 @@ impl MergeCmd {
 
         // Show preview
         if !self.confirm {
-            println!("\n  {} Preview Mode - No files will be modified", "ℹ".cyan());
+            println!(
+                "\n  {} Preview Mode - No files will be modified",
+                "ℹ".cyan()
+            );
             MergeI18nUseCase::show_preview(&summary);
             return Ok(());
         }
 
         // Actually perform merge
-        println!("\n  {} Merging {} files...", "⏳".cyan(), summary.files_to_merge.len());
+        println!(
+            "\n  {} Merging {} files...",
+            "⏳".cyan(),
+            summary.files_to_merge.len()
+        );
         let result = MergeI18nUseCase::execute_merge(&summary).await?;
 
         // Show results
         println!("\n  {} Merge Complete!", "✓".green());
-        println!("    {} files merged successfully", result.successful.to_string().green());
-        
+        println!(
+            "    {} files merged successfully",
+            result.successful.to_string().green()
+        );
+
         if result.failed > 0 {
             println!("    {} files failed", result.failed.to_string().red());
             println!("\n  Errors:");

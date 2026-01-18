@@ -1,9 +1,9 @@
-use clap::Parser;
-use anyhow::Result;
-use owo_colors::OwoColorize;
-use crate::cli::wizard::{Wizard, Framework, TranslationApi};
+use crate::cli::commands::{extract, replace, translate};
 use crate::cli::progress::ProgressReporter;
-use crate::cli::commands::{extract, translate, replace};
+use crate::cli::wizard::{Framework, TranslationApi, Wizard};
+use anyhow::Result;
+use clap::Parser;
+use owo_colors::OwoColorize;
 
 #[derive(Parser, Debug)]
 pub struct SetupCmd {
@@ -58,7 +58,10 @@ impl SetupCmd {
             translate_cmd.run().await?;
             reporter.finish_with_success(&translate_spinner, "Translation complete");
         } else {
-            println!("\n{}", "Step 2/4: Skipping translation (manual mode)".dimmed());
+            println!(
+                "\n{}",
+                "Step 2/4: Skipping translation (manual mode)".dimmed()
+            );
         }
 
         // Step 3: Replace strings

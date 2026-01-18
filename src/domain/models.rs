@@ -1,13 +1,13 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Represents a translatable string extracted from code
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TranslationKey {
-    pub id: String,           // e.g., "button_login"
-    pub source: String,       // Original string: "Login"
-    pub file_path: String,    // Where it was found
+    pub id: String,        // e.g., "button_login"
+    pub source: String,    // Original string: "Login"
+    pub file_path: String, // Where it was found
     pub line: usize,
 }
 
@@ -41,6 +41,7 @@ impl LanguageFile {
 /// Supported file types for extraction
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum FileType {
     JavaScript,
     TypeScript,
@@ -84,11 +85,11 @@ pub struct ExtractionConfig {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct TranslationKeyWithPosition {
-    pub id: String,           // e.g., "button_login"
-    pub source: String,       // Original string: "Login"
-    pub file_path: String,    // Where it was found
+    pub id: String,        // e.g., "button_login"
+    pub source: String,    // Original string: "Login"
+    pub file_path: String, // Where it was found
     pub line: usize,
-    pub start_byte: usize,    // Position in file (bytes)
+    pub start_byte: usize, // Position in file (bytes)
     pub end_byte: usize,
     pub quote_type: QuoteType,
 }
@@ -106,9 +107,9 @@ pub enum QuoteType {
 /// Strategy for code replacement (how to generate translation calls)
 #[derive(Debug, Clone)]
 pub enum ReplacementStrategy {
-    ReactI18n,   // {t("key")} with react-i18next
-    VueI18n,     // {{ $t('key') }} with vue-i18n
-    Generic,     // t("key") with generic import
+    ReactI18n, // {t("key")} with react-i18next
+    VueI18n,   // {{ $t('key') }} with vue-i18n
+    Generic,   // t("key") with generic import
 }
 
 impl ReplacementStrategy {
@@ -118,7 +119,10 @@ impl ReplacementStrategy {
             "react-i18n" => Ok(Self::ReactI18n),
             "vue-i18n" => Ok(Self::VueI18n),
             "generic" => Ok(Self::Generic),
-            _ => Err(anyhow::anyhow!("Unknown strategy: {}. Supported: react-i18n, vue-i18n, generic", s)),
+            _ => Err(anyhow::anyhow!(
+                "Unknown strategy: {}. Supported: react-i18n, vue-i18n, generic",
+                s
+            )),
         }
     }
 
@@ -136,7 +140,7 @@ impl ReplacementStrategy {
         match self {
             Self::ReactI18n => {
                 if in_jsx {
-                    format!("{{t(\"{}\")}}",  key)
+                    format!("{{t(\"{}\")}}", key)
                 } else {
                     format!("t(\"{}\")", key)
                 }

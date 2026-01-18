@@ -1,4 +1,4 @@
-use crate::domain::models::{TranslationKeyWithPosition, ReplacementStrategy};
+use crate::domain::models::{ReplacementStrategy, TranslationKeyWithPosition};
 use crate::domain::ports::CodeReplacer;
 use async_trait::async_trait;
 use std::path::Path;

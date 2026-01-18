@@ -1,4 +1,4 @@
-use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use owo_colors::OwoColorize;
 use std::time::Duration;
 
@@ -25,7 +25,7 @@ impl ProgressReporter {
         pb.set_style(
             ProgressStyle::default_spinner()
                 .template("{spinner:.cyan} {msg}")
-                .expect("Invalid progress template")
+                .expect("Invalid progress template"),
         );
         pb.set_message(msg.to_string());
         pb.enable_steady_tick(Duration::from_millis(100));
@@ -40,7 +40,7 @@ impl ProgressReporter {
             ProgressStyle::default_bar()
                 .template("{msg} [{bar:40.cyan/blue}] {pos}/{len} ({percent}%)")
                 .expect("Invalid progress template")
-                .progress_chars("█▓▒░")
+                .progress_chars("█▓▒░"),
         );
         pb.set_message(msg.to_string());
         pb
@@ -73,7 +73,10 @@ impl ExtractionSummary {
     #[allow(dead_code)]
     pub fn print(&self) {
         println!("\n{}", "📊 Extraction Summary:".bold());
-        println!("  {} Total strings found", self.total_strings.to_string().green());
+        println!(
+            "  {} Total strings found",
+            self.total_strings.to_string().green()
+        );
         println!("    ├─ {} double quotes", self.double_quotes);
         println!("    ├─ {} single quotes", self.single_quotes);
         println!("    ├─ {} template literals", self.template_literals);
@@ -114,7 +117,13 @@ impl ReplacementSummary {
     #[allow(dead_code)]
     pub fn print(&self) {
         println!("\n{}", "📝 Replacement Summary:".bold());
-        println!("  {} Files modified", self.files_processed.to_string().green());
-        println!("  {} Strings replaced", self.strings_replaced.to_string().green());
+        println!(
+            "  {} Files modified",
+            self.files_processed.to_string().green()
+        );
+        println!(
+            "  {} Strings replaced",
+            self.strings_replaced.to_string().green()
+        );
     }
 }

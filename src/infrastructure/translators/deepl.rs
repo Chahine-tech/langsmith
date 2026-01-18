@@ -64,7 +64,11 @@ impl Translator for DeepLTranslator {
 
         // Debug: log key info (first and last chars only)
         let key_preview = if self.api_key.len() > 10 {
-            format!("{}...{}", &self.api_key[..5], &self.api_key[self.api_key.len()-5..])
+            format!(
+                "{}...{}",
+                &self.api_key[..5],
+                &self.api_key[self.api_key.len() - 5..]
+            )
         } else {
             "***".to_string()
         };

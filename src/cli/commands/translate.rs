@@ -1,8 +1,8 @@
+use crate::application::TranslateKeysUseCase;
+use crate::cli::presenter::Presenter;
+use crate::infrastructure::{ConfigManager, DeepLTranslator, OpenAITranslator};
 use clap::Parser;
 use std::path::PathBuf;
-use crate::application::TranslateKeysUseCase;
-use crate::infrastructure::{ConfigManager, DeepLTranslator, OpenAITranslator};
-use crate::cli::presenter::Presenter;
 
 #[derive(Parser, Debug)]
 pub struct TranslateCmd {

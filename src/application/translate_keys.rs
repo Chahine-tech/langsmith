@@ -1,7 +1,7 @@
-use crate::domain::ports::Translator;
 use crate::domain::models::LanguageFile;
-use std::path::Path;
+use crate::domain::ports::Translator;
 use std::collections::HashMap;
+use std::path::Path;
 
 /// Use case: Translate extracted strings to target languages
 pub struct TranslateKeysUseCase;
@@ -51,10 +51,12 @@ impl TranslateKeysUseCase {
             // 3. Write translated file
             let output_file = source_file
                 .parent()
-                .ok_or_else(|| anyhow::anyhow!(
-                    "Cannot extract parent directory from path: {}",
-                    source_file.display()
-                ))?
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Cannot extract parent directory from path: {}",
+                        source_file.display()
+                    )
+                })?
                 .join(format!("{}.json", target_lang));
 
             let json = serde_json::to_string_pretty(&translated.translations)?;

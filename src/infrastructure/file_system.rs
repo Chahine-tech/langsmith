@@ -1,16 +1,20 @@
-use crate::domain::ports::{FileWriter, FileScanner};
-use crate::domain::models::{LanguageFile, FileType};
+use crate::domain::models::{FileType, LanguageFile};
+use crate::domain::ports::{FileScanner, FileWriter};
 use async_trait::async_trait;
 use std::path::Path;
-use walkdir::WalkDir;
 use tokio::fs;
+use walkdir::WalkDir;
 
 #[allow(dead_code)]
 pub struct FileSystemWriter;
 
 #[async_trait]
 impl FileWriter for FileSystemWriter {
-    async fn write_language_file(&self, path: &Path, language: &LanguageFile) -> anyhow::Result<()> {
+    async fn write_language_file(
+        &self,
+        path: &Path,
+        language: &LanguageFile,
+    ) -> anyhow::Result<()> {
         // Create parent directories if needed
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).await?;
@@ -43,12 +47,12 @@ impl FileScanner for FileSystemScanner {
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
         {
-            if let Some(ext) = entry.path().extension() {
-                if let Some(ext_str) = ext.to_str() {
-                    let file_type = FileType::from_extension(ext_str);
-                    if file_type.is_supported() {
-                        files.push((entry.path().to_path_buf(), file_type));
-                    }
+            if let Some(ext) = entry.path().extension()
+                && let Some(ext_str) = ext.to_str()
+            {
+                let file_type = FileType::from_extension(ext_str);
+                if file_type.is_supported() {
+                    files.push((entry.path().to_path_buf(), file_type));
                 }
             }
         }

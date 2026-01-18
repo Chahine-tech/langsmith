@@ -1,10 +1,10 @@
+mod application;
 mod cli;
 mod domain;
-mod application;
 mod infrastructure;
 
-use cli::Cli;
 use clap::Parser;
+use cli::Cli;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

@@ -1,4 +1,6 @@
-use crate::domain::models::{TranslationKey, LanguageFile, FileType, TranslationKeyWithPosition, ReplacementStrategy};
+use crate::domain::models::{
+    FileType, LanguageFile, ReplacementStrategy, TranslationKey, TranslationKeyWithPosition,
+};
 use async_trait::async_trait;
 use std::path::Path;
 
@@ -7,7 +9,11 @@ use std::path::Path;
 #[allow(unused)]
 pub trait StringExtractor: Send + Sync {
     /// Extract all translatable strings from a file
-    async fn extract(&self, path: &Path, file_type: FileType) -> anyhow::Result<Vec<TranslationKey>>;
+    async fn extract(
+        &self,
+        path: &Path,
+        file_type: FileType,
+    ) -> anyhow::Result<Vec<TranslationKey>>;
 }
 
 /// Port: Responsible for writing translation files
@@ -15,7 +21,8 @@ pub trait StringExtractor: Send + Sync {
 #[allow(unused)]
 pub trait FileWriter: Send + Sync {
     /// Write a language file to disk
-    async fn write_language_file(&self, path: &Path, language: &LanguageFile) -> anyhow::Result<()>;
+    async fn write_language_file(&self, path: &Path, language: &LanguageFile)
+    -> anyhow::Result<()>;
 
     /// Read a language file from disk
     async fn read_language_file(&self, path: &Path) -> anyhow::Result<LanguageFile>;
