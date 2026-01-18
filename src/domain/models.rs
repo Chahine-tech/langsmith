@@ -41,6 +41,7 @@ impl LanguageFile {
 /// Supported file types for extraction
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum FileType {
     JavaScript,
     TypeScript,

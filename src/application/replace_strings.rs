@@ -7,6 +7,7 @@ use tokio::fs;
 pub struct ReplaceStringsUseCase;
 
 impl ReplaceStringsUseCase {
+    #[allow(clippy::too_many_arguments)]
     pub async fn execute(
         source_path: &Path,
         translation_file: &Path,

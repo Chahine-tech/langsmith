@@ -47,12 +47,12 @@ impl FileScanner for FileSystemScanner {
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
         {
-            if let Some(ext) = entry.path().extension() {
-                if let Some(ext_str) = ext.to_str() {
-                    let file_type = FileType::from_extension(ext_str);
-                    if file_type.is_supported() {
-                        files.push((entry.path().to_path_buf(), file_type));
-                    }
+            if let Some(ext) = entry.path().extension()
+                && let Some(ext_str) = ext.to_str()
+            {
+                let file_type = FileType::from_extension(ext_str);
+                if file_type.is_supported() {
+                    files.push((entry.path().to_path_buf(), file_type));
                 }
             }
         }
