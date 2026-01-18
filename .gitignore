@@ -11,3 +11,9 @@
 node_modules/
 package-lock.json
 yarn.lock
+
+# Nix development
+result
+result-*
+.dirlocals
+.envrc
