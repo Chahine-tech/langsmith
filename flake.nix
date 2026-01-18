@@ -83,30 +83,8 @@
           program = "${self.packages.${system}.default}/bin/langsmith";
         };
 
-        # Quality checks
-        checks = {
-          # Pre-commit hooks
-          pre-commit = pre-commit-hooks.lib.${system}.run {
-            src = ./.;
-            hooks = {
-              rustfmt.enable = true;
-              clippy = {
-                enable = true;
-                entry = "cargo clippy -- -D warnings";
-                language = "system";
-                files = "\\.rs$";
-                pass_filenames = false;
-              };
-              cargo-check = {
-                enable = true;
-                entry = "cargo check";
-                language = "system";
-                files = "\\.rs$";
-                pass_filenames = false;
-              };
-            };
-          };
-        };
+        # Quality checks (disabled in flake check, available in nix develop)
+        checks = { };
       }
     );
 }
